@@ -1,8 +1,8 @@
 /* ------------------------------------------------------------------------- *
- * Name   : eepromMaint
+ * Name   : GAW_eeprom_Maint
  * Author : Gerard Wassink
- * Date   : November 10, 2021
- * Purpose: Inspect and maintain the Arduino's EEPROM contents
+ * Date   : January, 2026
+ * Purpose: Inspect and maintain an Arduino's EEPROM contents
  * Versions:
  *   0.1  : Initial code base, displaying full EEPROM contents (512 bytes)
  * ------------------------------------------------------------------------- */
@@ -45,15 +45,17 @@
 
 #include <EEPROM.h>
 
+int EEPROM_size = EEPROM.length();
 
 /* ------------------------------------------------------------------------- *
  *       Main program loop                                            loop()
  * ------------------------------------------------------------------------- */
 void loop() {
   char choice = ' ';
+  char byte;
 
   displayMainMenu();
-  
+
   while (choice != 'x') {
     
     if (Serial.available() > 0) {
@@ -67,6 +69,22 @@ void loop() {
           displayEEPROM();
           debugln();
           displayMainMenu();
+          break;
+        
+        case 'w':
+        case 'W':
+          int parm = 1;                     // <<<---=== ######### CONTINUE CODING HERE ############
+          debugln("W found");
+          
+          if (Serial.available() > 0) {
+            byte = Serial.read();
+            if ( byte != ' ' || (byte < 48 || byte > 70)) {
+              debug("Invalid character found: ");
+              debugln(byte);
+              Serial.flush();
+              continue;
+            }
+          }
           break;
         
         case 'x':
@@ -101,8 +119,14 @@ void loop() {
 void displayMainMenu() {
   debugln(F(" "));
   displayHeader("main menu");
-  debugln(F("D. Display EEPROM contents"));
-  debugln(F("X. Exit"));
+
+  debug("EEPROM length:");
+  debugln(EEPROM_size);
+  
+  debugln();
+  debugln(F("D          - Display EEPROM contents"));
+  debugln(F("W addr val - Write EEPROM contents"));
+  debugln(F("X          - Exit"));
   debugln(F("Make a choice"));
   debug("> ");
 }
@@ -122,7 +146,7 @@ void displayEEPROM() {
   debugln("");
   debugln(F("addr - 0        4        8        C          10       14       18       1C      "));
 
-  for (a=0; a<512; a++) {
+  for (a=0; a<EEPROM_size; a++) {
     b = EEPROM.read(a);
     
     if ( (a % 32) == 0 ) {
@@ -166,9 +190,12 @@ void displayHeader(String hdr) {
  * ------------------------------------------------------------------------- */
 void setup() {
   debugstart(57600);
-  delay(500);
+  delay(1000);
   while (!Serial) {
     debugln("no serial connection (yet)");
   }
-  Serial.setTimeout(60000);           // wait for max this time
+
+//  Serial.setTimeout(60000);           // wait for max this time
+  Serial.setTimeout(1000);           // wait for max this time
+
 }
