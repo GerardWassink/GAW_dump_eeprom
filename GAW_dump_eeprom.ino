@@ -1,10 +1,10 @@
 /* ------------------------------------------------------------------------- *
- * Name   : GAW_eeprom_Maint
+ * Name   : GAW_dump_eeprom
  * Author : Gerard Wassink
  * Date   : January, 2026
- * Purpose: Inspect and maintain an Arduino's EEPROM contents
+ * Purpose: Show an Arduino's EEPROM contents
  * Versions:
- *   0.1  : Initial code base, displaying full EEPROM contents (512 bytes)
+ *   0.1  : Initial code base, displaying full EEPROM contents
  * ------------------------------------------------------------------------- */
 #define progVersion "0.1"                   // Program version definition
 /* ------------------------------------------------------------------------- *
@@ -51,65 +51,17 @@ int EEPROM_size = EEPROM.length();
  *       Main program loop                                            loop()
  * ------------------------------------------------------------------------- */
 void loop() {
-  char choice = ' ';
-  char byte;
 
   displayMainMenu();
 
-  while (choice != 'x') {
-    
-    if (Serial.available() > 0) {
-      choice = Serial.read();
-      
-      switch (choice) {
+  displayEEPROM();
+  debugln();
         
-        case 'd':
-        case 'D':
-          debugln(String(choice));
-          displayEEPROM();
-          debugln();
-          displayMainMenu();
-          break;
-        
-        case 'w':
-        case 'W':
-          int parm = 1;                     // <<<---=== ######### CONTINUE CODING HERE ############
-          debugln("W found");
-          
-          if (Serial.available() > 0) {
-            byte = Serial.read();
-            if ( byte != ' ' || (byte < 48 || byte > 70)) {
-              debug("Invalid character found: ");
-              debugln(byte);
-              Serial.flush();
-              continue;
-            }
-          }
-          break;
-        
-        case 'x':
-        case 'X':
-          debugln(String(choice));
-          debugln(F(" "));
-          displayHeader("exit program");
-          delay(500);
-          exit(0);
-        
-        case '\n':                  // skip the enter key
-          break;
-        
-        default:
-          debugln();
-          debug(F("Invalid choice '"));
-          debug(String(choice));
-          debugln(F("', try again: >"));
-          break;
-        
-      }
-    }
-  }
-    
+  debugln();
+  displayHeader("end of dump, reset to dump again");
   delay(500);
+  exit(0);
+
 }
 
 
@@ -118,17 +70,8 @@ void loop() {
  * ------------------------------------------------------------------------- */
 void displayMainMenu() {
   debugln(F(" "));
-  displayHeader("main menu");
-
   debug("EEPROM length:");
   debugln(EEPROM_size);
-  
-  debugln();
-  debugln(F("D          - Display EEPROM contents"));
-  debugln(F("W addr val - Write EEPROM contents"));
-  debugln(F("X          - Exit"));
-  debugln(F("Make a choice"));
-  debug("> ");
 }
 
 
@@ -136,39 +79,37 @@ void displayMainMenu() {
  *       Display contents of EEPROM                          displayEEPROM()
  * ------------------------------------------------------------------------- */
 void displayEEPROM() {
-  int a = 0;
-  byte b;
-  int len = 0;
-  String tmp;
+  int adr = 0;
+  byte byte;
   String hex;
   
   displayHeader("print EEPROM contents");
   debugln("");
   debugln(F("addr - 0        4        8        C          10       14       18       1C      "));
 
-  for (a=0; a<EEPROM_size; a++) {
-    b = EEPROM.read(a);
+  for (adr = 0; adr < EEPROM_size; adr++) {
+    byte = EEPROM.read(adr);
     
-    if ( (a % 32) == 0 ) {
-      if (a > 0 ) debugln("");
-      hex = "000";
-      hex.concat(String(a, HEX));
-      hex = hex.substring(hex.length()-4);
-      debug(hex);
+    if ( (adr % 32) == 0 ) {                // time for a newline?
+      if (adr > 0 ) debugln();
+      hex = "000";                          // create
+      hex.concat(String(adr, HEX));         //   hex
+      hex = hex.substring(hex.length()-4);  //   address
+      debug(hex);                           // print address
     }
     
-    if ( (a % 16) == 0 ) {
-      debug(" -");
+    if ( (adr % 16) == 0 ) {                // create
+      debug(" -");                          //   gap at % 16
     }
     
-    if ( (a % 4) == 0 ) {
-      debug(" ");
+    if ( (adr % 4) == 0 ) {                 // create
+      debug(" ");                           //   space at %4
     }
     
-    hex = "0";
-    hex.concat(String(b, HEX));
-    hex = hex.substring(hex.length()-2);
-    debug(hex);
+    hex = "0";                              // make
+    hex.concat(String(byte, HEX));          //   up
+    hex = hex.substring(hex.length()-2);    //   hex digit
+    debug(hex);                             // and print it
 
   }
   
@@ -179,7 +120,7 @@ void displayEEPROM() {
  *       Display program header                              displayHeader()
  * ------------------------------------------------------------------------- */
 void displayHeader(String hdr) {
-  debug(F("---===### eepromMaint - "));
+  debug(F("---===### GAW_dump_eeprom - "));
   debug(hdr);
   debugln(F(" ###===---"));
 }
@@ -194,8 +135,5 @@ void setup() {
   while (!Serial) {
     debugln("no serial connection (yet)");
   }
-
-//  Serial.setTimeout(60000);           // wait for max this time
-  Serial.setTimeout(1000);           // wait for max this time
 
 }

@@ -1,4 +1,3 @@
-# GAW_eeprom_Maint
- Show (and maintain) EEPROM contents
+# GAW_dump_eeprom
+ Dump EEPROM contents
 
- Under development!
