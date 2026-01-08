@@ -5,8 +5,9 @@
  * Purpose: Show an Arduino's EEPROM contents
  * Versions:
  *   0.1  : Initial code base, displaying full EEPROM contents
+ *   0.2  : Added printable characters
  * ------------------------------------------------------------------------- */
-#define progVersion "0.1"                   // Program version definition
+#define progVersion "0.2"                   // Program version definition
 /* ------------------------------------------------------------------------- *
  *             GNU LICENSE CONDITIONS
  * ------------------------------------------------------------------------- *
@@ -25,7 +26,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * ------------------------------------------------------------------------- *
- *       Copyright (C) 2021 Gerard Wassink
+ *       Copyright (C) 2026 Gerard Wassink
  * ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- *
@@ -55,10 +56,9 @@ void loop() {
   displayMainMenu();
 
   displayEEPROM();
-  debugln();
         
   debugln();
-  displayHeader("end of dump, reset to dump again");
+  displayHeader(" - end of dump, reset to dump again");
   delay(500);
   exit(0);
 
@@ -70,7 +70,7 @@ void loop() {
  * ------------------------------------------------------------------------- */
 void displayMainMenu() {
   debugln(F(" "));
-  debug("EEPROM length:");
+  debug("EEPROM length: ");
   debugln(EEPROM_size);
 }
 
@@ -80,39 +80,54 @@ void displayMainMenu() {
  * ------------------------------------------------------------------------- */
 void displayEEPROM() {
   int adr = 0;
-  byte byte;
+  char byte;
   String hex;
+  String chars = "";
+  char c;
   
-  displayHeader("print EEPROM contents");
+  displayHeader("");
   debugln("");
-  debugln(F("addr - 0        4        8        C          10       14       18       1C      "));
+  debugln(F("addr 0        4        8        C          10       14       18       1C      "));
 
   for (adr = 0; adr < EEPROM_size; adr++) {
     byte = EEPROM.read(adr);
     
     if ( (adr % 32) == 0 ) {                // time for a newline?
-      if (adr > 0 ) debugln();
+      if (adr > 0 ) {                       // not for first line
+        debug(" - ");
+        debugln(chars);
+        chars = "";
+      }
       hex = "000";                          // create
       hex.concat(String(adr, HEX));         //   hex
       hex = hex.substring(hex.length()-4);  //   address
-      debug(hex);                           // print address
-    }
-    
-    if ( (adr % 16) == 0 ) {                // create
-      debug(" -");                          //   gap at % 16
-    }
-    
-    if ( (adr % 4) == 0 ) {                 // create
+      debug(hex);                           // print hex address
+      debug(" ");
+
+    } else if ( (adr % 16) == 0 ) {         // create
+      debug(" - ");                          // gap at % 16 
+      chars.concat(" - ");
+
+    } else if ( (adr % 4) == 0 ) {          // create
       debug(" ");                           //   space at %4
+      chars.concat(" ");
+
     }
     
+    isPrintable(byte) ? c = byte : c='.';   // add character
+    chars.concat(c);                        //   to char string
+
     hex = "0";                              // make
     hex.concat(String(byte, HEX));          //   up
     hex = hex.substring(hex.length()-2);    //   hex digit
     debug(hex);                             // and print it
 
   }
-  
+
+  debug(" - ");                             // print last
+  debugln(chars);                           //   batch of
+  chars = "";                               //   characters
+
 }
 
 
@@ -120,7 +135,7 @@ void displayEEPROM() {
  *       Display program header                              displayHeader()
  * ------------------------------------------------------------------------- */
 void displayHeader(String hdr) {
-  debug(F("---===### GAW_dump_eeprom - "));
+  debug(F("---===### GAW_dump_eeprom "));
   debug(hdr);
   debugln(F(" ###===---"));
 }
@@ -131,7 +146,7 @@ void displayHeader(String hdr) {
  * ------------------------------------------------------------------------- */
 void setup() {
   debugstart(57600);
-  delay(1000);
+  delay(500);
   while (!Serial) {
     debugln("no serial connection (yet)");
   }
