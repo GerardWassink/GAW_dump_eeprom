@@ -48,20 +48,31 @@
 
 int EEPROM_size = EEPROM.length();
 
+
+/* ------------------------------------------------------------------------- *
+ *       Initial setup routing                                       setup()
+ * ------------------------------------------------------------------------- */
+void setup() {
+  debugstart(57600);
+  delay(500);
+  while (!Serial) {
+    debugln("no serial connection (yet)");
+  }
+}
+
+
 /* ------------------------------------------------------------------------- *
  *       Main program loop                                            loop()
  * ------------------------------------------------------------------------- */
 void loop() {
-
   displayMainMenu();
 
   displayEEPROM();
-        
+
   debugln();
   displayHeader(" - end of dump, reset to dump again");
   delay(500);
   exit(0);
-
 }
 
 
@@ -98,6 +109,7 @@ void displayEEPROM() {
         debugln(chars);
         chars = "";
       }
+
       hex = "000";                          // create
       hex.concat(String(adr, HEX));         //   hex
       hex = hex.substring(hex.length()-4);  //   address
@@ -138,17 +150,4 @@ void displayHeader(String hdr) {
   debug(F("---===### GAW_dump_eeprom "));
   debug(hdr);
   debugln(F(" ###===---"));
-}
-
-
-/* ------------------------------------------------------------------------- *
- *       Initial setup routing                                       setup()
- * ------------------------------------------------------------------------- */
-void setup() {
-  debugstart(57600);
-  delay(500);
-  while (!Serial) {
-    debugln("no serial connection (yet)");
-  }
-
 }
